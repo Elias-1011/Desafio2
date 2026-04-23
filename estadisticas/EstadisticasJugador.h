@@ -31,8 +31,6 @@ public:
 
     EstadisticasJugador& operator+=(const EstadisticasJugador& otro);
 
-    long getTamanioBytes() const;
-
     friend ostream& operator<<(ostream& os, const EstadisticasJugador& e);
 };
 

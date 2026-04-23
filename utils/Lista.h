@@ -3,79 +3,99 @@
 
 #include <iostream>
 #include <stdexcept>
+#include "MedidorRecursos.h"
 
 using namespace std;
 
 template <typename T>
 class Lista {
 private:
-    T*  datos;
-    int capacidad;
-    int tamanio;
+    char* bufer;
+    int   capacidad;
+    int   tamanio;
+
+    T* apuntador(int i) {
+        return reinterpret_cast<T*>(bufer) + i;
+    }
+
+    const T* apuntador(int i) const {
+        return reinterpret_cast<const T*>(bufer) + i;
+    }
 
     void redimensionar() {
-        capacidad *= 2;
-        T* nuevo = new T[capacidad];
-        for (int i = 0; i < tamanio; i++)
-            nuevo[i] = datos[i];
-        delete[] datos;
-        datos = nuevo;
+        int   nuevaCap = capacidad * 2;
+        char* nuevo    = static_cast<char*>(::operator new(sizeof(T) * nuevaCap));
+        for (int i = 0; i < tamanio; i++) {
+            new (reinterpret_cast<T*>(nuevo) + i) T(*apuntador(i));
+            apuntador(i)->~T();
+        }
+        MedidorRecursos::getInstancia().restarMemoria(sizeof(T) * capacidad);
+        ::operator delete(bufer);
+        bufer     = nuevo;
+        capacidad = nuevaCap;
+        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
     }
 
 public:
     Lista(int capInicial = 8)
         : capacidad(capInicial), tamanio(0) {
-        datos = new T[capacidad];
+        bufer = static_cast<char*>(::operator new(sizeof(T) * capacidad));
+        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
     }
 
     Lista(const Lista<T>& otra)
         : capacidad(otra.capacidad), tamanio(otra.tamanio) {
-        datos = new T[capacidad];
+        bufer = static_cast<char*>(::operator new(sizeof(T) * capacidad));
         for (int i = 0; i < tamanio; i++)
-            datos[i] = otra.datos[i];
+            new (apuntador(i)) T(*otra.apuntador(i));
+        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
     }
 
     Lista<T>& operator=(const Lista<T>& otra) {
         if (this == &otra) return *this;
-        delete[] datos;
+        for (int i = 0; i < tamanio; i++) apuntador(i)->~T();
+        MedidorRecursos::getInstancia().restarMemoria(sizeof(T) * capacidad);
+        ::operator delete(bufer);
         capacidad = otra.capacidad;
         tamanio   = otra.tamanio;
-        datos     = new T[capacidad];
+        bufer     = static_cast<char*>(::operator new(sizeof(T) * capacidad));
         for (int i = 0; i < tamanio; i++)
-            datos[i] = otra.datos[i];
+            new (apuntador(i)) T(*otra.apuntador(i));
+        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
         return *this;
     }
 
     ~Lista() {
-        delete[] datos;
+        for (int i = 0; i < tamanio; i++) apuntador(i)->~T();
+        MedidorRecursos::getInstancia().restarMemoria(sizeof(T) * capacidad);
+        ::operator delete(bufer);
     }
 
     void agregar(const T& elemento) {
-        if (tamanio == capacidad)
-            redimensionar();
-        datos[tamanio++] = elemento;
+        if (tamanio == capacidad) redimensionar();
+        new (apuntador(tamanio)) T(elemento);
+        tamanio++;
     }
 
     T& operator[](int i) {
         if (i < 0 || i >= tamanio)
             throw out_of_range("Lista: indice fuera de rango");
-        return datos[i];
+        return *apuntador(i);
     }
 
     const T& operator[](int i) const {
         if (i < 0 || i >= tamanio)
             throw out_of_range("Lista: indice fuera de rango");
-        return datos[i];
+        return *apuntador(i);
     }
 
-    int getTamanio() const { return tamanio; }
+    int  getTamanio() const { return tamanio; }
+    bool estaVacia()  const { return tamanio == 0; }
 
-    bool estaVacia() const { return tamanio == 0; }
-
-    void limpiar() { tamanio = 0; }
-
-    long getTamanioBytes() const {
-        return sizeof(*this) + sizeof(T) * capacidad;
+    void limpiar() {
+        for (int i = 0; i < tamanio; i++) apuntador(i)->~T();
+        tamanio = 0;
     }
 };
+
 #endif

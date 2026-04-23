@@ -7,10 +7,11 @@ EstadisticasEquipo::EstadisticasEquipo()
     empatados(0), perdidos(0), tarjetasAmarillas(0),
     tarjetasRojas(0), faltas(0) {}
 
-EstadisticasEquipo::EstadisticasEquipo(short gf, short gc, short gan,
-                                       short emp, short per, short amarillas, short rojas, short faltas)
-    : golesFavor(gf), golesContra(gc), ganados(gan),
-    empatados(emp), perdidos(per), tarjetasAmarillas(amarillas),
+EstadisticasEquipo::EstadisticasEquipo(short golesFavor, short golesContra,
+                                       short ganados, short empatados, short perdidos,
+                                       short amarillas, short rojas, short faltas)
+    : golesFavor(golesFavor), golesContra(golesContra), ganados(ganados),
+    empatados(empatados), perdidos(perdidos), tarjetasAmarillas(amarillas),
     tarjetasRojas(rojas), faltas(faltas) {}
 
 short EstadisticasEquipo::getGolesFavor() const        { return golesFavor; }
@@ -44,10 +45,6 @@ EstadisticasEquipo& EstadisticasEquipo::operator+=(const EstadisticasEquipo& otr
     tarjetasRojas     += otro.tarjetasRojas;
     faltas            += otro.faltas;
     return *this;
-}
-
-long EstadisticasEquipo::getTamanioBytes() const {
-    return sizeof(*this);
 }
 
 ostream& operator<<(ostream& os, const EstadisticasEquipo& e) {

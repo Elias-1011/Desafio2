@@ -33,10 +33,6 @@ EstadisticasJugador& EstadisticasJugador::operator+=(const EstadisticasJugador& 
     return *this;
 }
 
-long EstadisticasJugador::getTamanioBytes() const {
-    return sizeof(*this);
-}
-
 ostream& operator<<(ostream& os, const EstadisticasJugador& e) {
     os << "Goles: "        << e.goles
        << " | Partidos: "  << e.partidosJugados

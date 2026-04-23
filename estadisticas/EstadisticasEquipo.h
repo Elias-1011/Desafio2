@@ -18,8 +18,8 @@ private:
 
 public:
     EstadisticasEquipo();
-    EstadisticasEquipo(short gf, short gc, short gan,
-                       short emp, short per, short amarillas,
+    EstadisticasEquipo(short golesFavor, short golesContra, short ganados,
+                       short empatados, short perdidos, short amarillas,
                        short rojas, short faltas);
 
     short getGolesFavor() const;
@@ -35,8 +35,6 @@ public:
     float getPromGolesContra() const;
 
     EstadisticasEquipo& operator+=(const EstadisticasEquipo& otro);
-
-    long getTamanioBytes() const;
 
     friend ostream& operator<<(ostream& os, const EstadisticasEquipo& e);
 };
