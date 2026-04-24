@@ -3,40 +3,50 @@
 using namespace std;
 
 Jugador::Jugador()
-    : nombre(""), apellido(""), numeroCamiseta(0), estadisticas() {
-    MedidorRecursos::getInstancia().sumarMemoria(
-        nombre.capacity() + apellido.capacity()
-        );
+    : nombre(""), apellido(""), numeroCamiseta(0),
+    estadisticas(), bytesReportados(0) {
+    bytesReportados = nombre.capacity() + apellido.capacity();
+    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
 }
 
 Jugador::Jugador(const string& nombre, const string& apellido,
                  short numeroCamiseta, const EstadisticasJugador& estadisticas)
     : nombre(nombre), apellido(apellido),
-    numeroCamiseta(numeroCamiseta), estadisticas(estadisticas) {
-    MedidorRecursos::getInstancia().sumarMemoria(
-        nombre.capacity() + apellido.capacity()
-        );
+    numeroCamiseta(numeroCamiseta), estadisticas(estadisticas),
+    bytesReportados(0) {
+    bytesReportados = this->nombre.capacity() + this->apellido.capacity();
+    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
 }
 
 Jugador::Jugador(const Jugador& otro)
     : nombre(otro.nombre), apellido(otro.apellido),
-    numeroCamiseta(otro.numeroCamiseta), estadisticas(otro.estadisticas) {
-    MedidorRecursos::getInstancia().sumarMemoria(
-        nombre.capacity() + apellido.capacity()
-        );
+    numeroCamiseta(otro.numeroCamiseta), estadisticas(otro.estadisticas),
+    bytesReportados(0) {
+    bytesReportados = nombre.capacity() + apellido.capacity();
+    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+}
+
+Jugador& Jugador::operator=(const Jugador& otro) {
+    if (this == &otro) return *this;
+    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
+    nombre         = otro.nombre;
+    apellido       = otro.apellido;
+    numeroCamiseta = otro.numeroCamiseta;
+    estadisticas   = otro.estadisticas;
+    bytesReportados = nombre.capacity() + apellido.capacity();
+    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    return *this;
 }
 
 Jugador::~Jugador() {
-    MedidorRecursos::getInstancia().restarMemoria(
-        nombre.capacity() + apellido.capacity()
-        );
+    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
 }
 
-const string& Jugador::getNombre()        const { return nombre; }
-const string& Jugador::getApellido()      const { return apellido; }
+const string& Jugador::getNombre()         const { return nombre; }
+const string& Jugador::getApellido()       const { return apellido; }
 short         Jugador::getNumeroCamiseta() const { return numeroCamiseta; }
 
-EstadisticasJugador& Jugador::getEstadisticas()             { return estadisticas; }
+EstadisticasJugador&       Jugador::getEstadisticas()       { return estadisticas; }
 const EstadisticasJugador& Jugador::getEstadisticas() const { return estadisticas; }
 
 ostream& operator<<(ostream& os, const Jugador& j) {

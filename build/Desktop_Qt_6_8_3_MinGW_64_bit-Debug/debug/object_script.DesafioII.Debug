@@ -1,0 +1,15 @@
+debug/Equipo.o
+debug/Jugador.o
+debug/EstadisticasEquipo.o
+debug/EstadisticasJugador.o
+debug/main.o
+debug/EstPartidoEquipo.o
+debug/JugadorConvocado.o
+debug/Partido.o
+debug/EntradaTabla.o
+debug/Etapa.o
+debug/Grupo.o
+debug/TablaClasificacion.o
+debug/Torneo.o
+debug/GestorArchivos.o
+debug/MedidorRecursos.o

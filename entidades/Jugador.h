@@ -14,17 +14,20 @@ private:
     string              apellido;
     short               numeroCamiseta;
     EstadisticasJugador estadisticas;
+    size_t              bytesReportados;
 
 public:
     Jugador();
     Jugador(const string& nombre, const string& apellido,
             short numeroCamiseta, const EstadisticasJugador& estadisticas);
     Jugador(const Jugador& otro);
+    Jugador& operator=(const Jugador& otro);
     ~Jugador();
 
-    const string&       getNombre()        const;
-    const string&       getApellido()      const;
+    const string&       getNombre()         const;
+    const string&       getApellido()       const;
     short               getNumeroCamiseta() const;
+
     EstadisticasJugador&       getEstadisticas();
     const EstadisticasJugador& getEstadisticas() const;
 
