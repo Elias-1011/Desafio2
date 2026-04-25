@@ -19,11 +19,20 @@ private:
     Lista<Grupo>   grupos;
     GestorArchivos gestor;
 
-    void ordenarPorRanking(Equipo** arreglo, char n);
-    void armarBombos(Equipo** bombo1, Equipo** bombo2,
+    bool datosCargados;
+    bool gruposConformados;
+    bool faseGruposSimulada;
+    bool transicionR16Hecha;
+    bool eliminatoriasSimuladas;
+
+    void   ordenarPorRanking(Equipo** arreglo, char n);
+    void   armarBombos(Equipo** bombo1, Equipo** bombo2,
                      Equipo** bombo3, Equipo** bombo4);
-    void mezclar(Equipo** arreglo, char n);
-    bool asignarBombo(Equipo** bombo, char indice, char n, char nivelBombo);
+    void   mezclar(Equipo** arreglo, char n);
+    bool   asignarBombo(Equipo** bombo, char indice,
+                      char n, char nivelBombo);
+    int    buscarIndiceEquipo(const Equipo* equipo) const;
+    string generarFecha(int dia) const;
 
 public:
     Torneo();
@@ -31,6 +40,7 @@ public:
     void cargarDatos(const string& rutaCSV);
     void conformarGrupos();
     void mostrarGrupos() const;
+    void simularFaseGrupos();
     void mostrarMenu();
 };
 

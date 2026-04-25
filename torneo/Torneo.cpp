@@ -2,22 +2,19 @@
 
 using namespace std;
 
-Torneo::Torneo() {
+Torneo::Torneo()
+    : equipos(48), grupos(12),
+    datosCargados(false), gruposConformados(false),
+    faseGruposSimulada(false), transicionR16Hecha(false),
+    eliminatoriasSimuladas(false) {
     srand((unsigned int)time(nullptr));
-    MedidorRecursos::getInstancia().resetIteraciones();
-    gestor.cargarEquipos("selecciones_clasificadas_mundial.csv", equipos);
-    MedidorRecursos::getInstancia().imprimir();
 }
 
 void Torneo::ordenarPorRanking(Equipo** arreglo, char n) {
-    // arreglo: puntero por valor — cuenta
-    // n: char por valor — cuenta
-    // clave: Equipo* — cuenta
-    // i, j: char — cuentan
-    size_t bytesLocales = sizeof(Equipo**)  // arreglo
-                          + sizeof(char)      // n
-                          + sizeof(Equipo*)   // clave
-                          + sizeof(char) * 2; // i, j
+    size_t bytesLocales = sizeof(Equipo**)
+    + sizeof(char)
+        + sizeof(Equipo*)
+        + sizeof(char) * 2;
     MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
 
     for (char i = 1; i < n; i++) {
@@ -37,14 +34,10 @@ void Torneo::ordenarPorRanking(Equipo** arreglo, char n) {
 }
 
 void Torneo::mezclar(Equipo** arreglo, char n) {
-    // arreglo: puntero por valor — cuenta
-    // n: char por valor — cuenta
-    // i, j: char — cuentan
-    // temp: Equipo* — cuenta
     size_t bytesLocales = sizeof(Equipo**)
-                          + sizeof(char)      // n
-                          + sizeof(char) * 2  // i, j
-                          + sizeof(Equipo*);  // temp
+    + sizeof(char)
+        + sizeof(char) * 2
+        + sizeof(Equipo*);
     MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
 
     for (char i = n - 1; i > 0; i--) {
@@ -60,16 +53,11 @@ void Torneo::mezclar(Equipo** arreglo, char n) {
 
 void Torneo::armarBombos(Equipo** bombo1, Equipo** bombo2,
                          Equipo** bombo3, Equipo** bombo4) {
-    // 4 punteros por valor — cuentan
-    // ordenados[48]: arreglo local de punteros — cuenta
-    // posUSA: char — cuenta
-    // usa: Equipo* — cuenta
-    // i: char — cuenta
-    size_t bytesLocales = sizeof(Equipo**) * 4    // bombo1-4
-                          + sizeof(Equipo*) * 48    // ordenados[48]
-                          + sizeof(char)            // posUSA
-                          + sizeof(Equipo*)         // usa
-                          + sizeof(char);           // i
+    size_t bytesLocales = sizeof(Equipo**) * 4
+                          + sizeof(Equipo*) * 48
+                          + sizeof(char)
+                          + sizeof(Equipo*)
+                          + sizeof(char);
     MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
 
     Equipo* ordenados[48];
@@ -117,14 +105,10 @@ void Torneo::armarBombos(Equipo** bombo1, Equipo** bombo2,
 
 bool Torneo::asignarBombo(Equipo** bombo, char indice,
                           char n, char nivelBombo) {
-    // bombo: puntero por valor — cuenta
-    // indice, n, nivelBombo: char por valor — cuentan
-    // equipo: Equipo* — cuenta
-    // g: char — cuenta
-    size_t bytesLocales = sizeof(Equipo**)   // bombo
-                          + sizeof(char) * 3   // indice, n, nivelBombo
-                          + sizeof(Equipo*)    // equipo
-                          + sizeof(char);      // g
+    size_t bytesLocales = sizeof(Equipo**)
+    + sizeof(char) * 3
+        + sizeof(Equipo*)
+        + sizeof(char);
     MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
 
     if (indice == n) {
@@ -155,63 +139,154 @@ bool Torneo::asignarBombo(Equipo** bombo, char indice,
     return false;
 }
 
+void Torneo::cargarDatos(const string& rutaCSV) {
+    // Limpiar estado si se recarga
+    gruposConformados      = false;
+    faseGruposSimulada     = false;
+    transicionR16Hecha     = false;
+    eliminatoriasSimuladas = false;
+    equipos.limpiar();
+    grupos.limpiar();
+
+    MedidorRecursos::getInstancia().resetIteraciones();
+    if (gestor.cargarEquipos(rutaCSV, equipos)) {
+        datosCargados = true;
+        cout << "Datos cargados correctamente. "
+             << equipos.getTamanio() << " equipos." << endl;
+    }
+    MedidorRecursos::getInstancia().imprimir();
+}
+int Torneo::buscarIndiceEquipo(const Equipo* equipo) const {
+    for (int i = 0; i < equipos.getTamanio(); i++) {
+        MedidorRecursos::getInstancia().contarIteracion();
+        if (&equipos[i] == equipo) return i;
+    }
+    return -1;
+}
+
+string Torneo::generarFecha(int dia) const {
+    // Base: 20 junio 2026, rango: 19 dias
+    int diaMes = 20 + dia;
+    int mes    = 6;
+    if (diaMes > 30) { diaMes -= 30; mes = 7; }
+    string fecha = "";
+    if (diaMes < 10) fecha += "0";
+    fecha += to_string(diaMes) + "/";
+    if (mes < 10) fecha += "0";
+    fecha += to_string(mes) + "/2026";
+    return fecha;
+}
+
+void Torneo::simularFaseGrupos() {
+    MedidorRecursos::getInstancia().resetIteraciones();
+
+    size_t bytesLocales = sizeof(int) * 48   // ultimoDia[48]
+                          + sizeof(int) * 19   // partidosPorDia[19]
+                          + sizeof(char) * 12  // pares[6][2]
+                          + sizeof(int) * 5;   // dia, idx1, idx2, g, p
+    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+
+    int ultimoDia[48];
+    for (int i = 0; i < 48; i++) ultimoDia[i] = -3;
+
+    int partidosPorDia[19];
+    for (int i = 0; i < 19; i++) partidosPorDia[i] = 0;
+
+    // Pares balanceados round-robin: 3 rondas de 2 partidos cada una
+    char pares[6][2] = {{0,3},{1,2},{0,1},{2,3},{0,2},{1,3}};
+
+    // Configurar partidos con fechas validas
+    for (char g = 0; g < grupos.getTamanio(); g++) {
+        Grupo& grupo = grupos[(int)g];
+        for (char p = 0; p < 6; p++) {
+            Equipo* eq1 = grupo.getEquipo((int)pares[(int)p][0]);
+            Equipo* eq2 = grupo.getEquipo((int)pares[(int)p][1]);
+            int idx1    = buscarIndiceEquipo(eq1);
+            int idx2    = buscarIndiceEquipo(eq2);
+
+            // Buscar el dia mas temprano disponible
+            int dia = -1;
+            for (int d = 0; d < 19; d++) {
+                if (partidosPorDia[d] < 4 &&
+                    d - ultimoDia[idx1] >= 3 &&
+                    d - ultimoDia[idx2] >= 3) {
+                    dia = d;
+                    break;
+                }
+                MedidorRecursos::getInstancia().contarIteracion();
+            }
+
+            if (dia == -1) {
+                cerr << "No se encontro fecha valida." << endl;
+                continue;
+            }
+
+            string fecha = generarFecha(dia);
+            Partido partido(fecha, "00:00", "nombreSede", eq1, eq2,
+                            "codArbitro1", "codArbitro2", "codArbitro3");
+            grupo.agregarPartido(partido);
+
+            partidosPorDia[dia]++;
+            ultimoDia[idx1] = dia;
+            ultimoDia[idx2] = dia;
+
+            MedidorRecursos::getInstancia().contarIteracion();
+        }
+    }
+
+    // Simular todos los partidos
+    for (char g = 0; g < grupos.getTamanio(); g++) {
+        grupos[(int)g].simularPartidos();
+        MedidorRecursos::getInstancia().contarIteracion();
+    }
+
+    // Construir tablas e imprimir resultados
+    cout << "\n=== RESULTADOS FASE DE GRUPOS ===\n";
+    for (char g = 0; g < grupos.getTamanio(); g++) {
+        grupos[(int)g].construirTabla();
+        grupos[(int)g].imprimirPartidos();
+        cout << "Tabla Grupo " << grupos[(int)g].getLetra() << ":\n";
+        cout << grupos[(int)g].getTabla() << "\n";
+        MedidorRecursos::getInstancia().contarIteracion();
+    }
+
+    faseGruposSimulada = true;
+    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    MedidorRecursos::getInstancia().imprimir();
+}
+
 void Torneo::conformarGrupos() {
-    // letras[12]: char array — cuenta
-    // bombo1-4[12]: arreglos de punteros — cuentan
-    // exito: bool — cuenta
-    // intentos: int — cuenta
-    // maxIntentos: int — cuenta
-    // i: char — cuenta
-    size_t bytesLocales = sizeof(char) * 12       // letras[12]
-                          + sizeof(Equipo*) * 12 * 4 // bombo1-4[12]
-                          + sizeof(bool)             // exito
-                          + sizeof(int) * 2          // intentos, maxIntentos
-                          + sizeof(char);            // i
+    size_t bytesLocales = sizeof(char) * 12
+                          + sizeof(Equipo*) * 12 * 4
+                          + sizeof(char);
     MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
     MedidorRecursos::getInstancia().resetIteraciones();
 
     char letras[12] = {'A','B','C','D','E','F',
                        'G','H','I','J','K','L'};
 
-    Equipo* bombo1[12], *bombo2[12], *bombo3[12], *bombo4[12];
-    armarBombos(bombo1, bombo2, bombo3, bombo4);
-
-    bool exito       = false;
-    int  intentos    = 0;
-    const int maxIntentos = 100;
-
-    while (!exito && intentos < maxIntentos) {
-        intentos++;
-
-        grupos.limpiar();
-        for (char i = 0; i < 12; i++) {
-            grupos.agregar(Grupo(letras[(int)i]));
-            MedidorRecursos::getInstancia().contarIteracion();
-        }
-
-        mezclar(bombo1, 12);
-        mezclar(bombo2, 12);
-        mezclar(bombo3, 12);
-        mezclar(bombo4, 12);
-
-        if (asignarBombo(bombo1, 0, 12, 0) &&
-            asignarBombo(bombo2, 0, 12, 1) &&
-            asignarBombo(bombo3, 0, 12, 2) &&
-            asignarBombo(bombo4, 0, 12, 3)) {
-            exito = true;
-        }
-
+    for (char i = 0; i < 12; i++) {
+        grupos.agregar(Grupo(letras[(int)i]));
         MedidorRecursos::getInstancia().contarIteracion();
     }
 
-    if (!exito) {
-        cerr << "Error: no se pudo conformar grupos tras "
-             << maxIntentos << " intentos." << endl;
+    Equipo* bombo1[12], *bombo2[12], *bombo3[12], *bombo4[12];
+    armarBombos(bombo1, bombo2, bombo3, bombo4);
+
+    mezclar(bombo1, 12);
+    mezclar(bombo2, 12);
+    mezclar(bombo3, 12);
+    mezclar(bombo4, 12);
+
+    if (!asignarBombo(bombo1, 0, 12, 0) ||
+        !asignarBombo(bombo2, 0, 12, 1) ||
+        !asignarBombo(bombo3, 0, 12, 2) ||
+        !asignarBombo(bombo4, 0, 12, 3)) {
+        cerr << "Error: no se pudo conformar los grupos." << endl;
         MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
         return;
     }
-
-    cout << "Grupos conformados en " << intentos << " intento(s)." << endl;
+    gruposConformados = true;
     MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
     mostrarGrupos();
     MedidorRecursos::getInstancia().imprimir();
@@ -229,14 +304,57 @@ void Torneo::mostrarMenu() {
     int opcion = 0;
     do {
         cout << "\n=== UdeAWorldCup ===" << endl;
-        cout << "1. Conformar grupos"    << endl;
-        cout << "0. Salir"              << endl;
+        cout << "  Estado actual:" << endl;
+        cout << "  Datos cargados:       " << (datosCargados         ? "SI" : "NO") << endl;
+        cout << "  Grupos conformados:   " << (gruposConformados      ? "SI" : "NO") << endl;
+        cout << "  Fase grupos simulada: " << (faseGruposSimulada     ? "SI" : "NO") << endl;
+        cout << "  Transicion R16:       " << (transicionR16Hecha     ? "SI" : "NO") << endl;
+        cout << "  Eliminatorias:        " << (eliminatoriasSimuladas ? "SI" : "NO") << endl;
+        cout << endl;
+        cout << "\n--------------------------------------"<< endl;
+        cout << "1. Cargar datos"                 << endl;
+        cout << "2. Conformar grupos"             << endl;
+        cout << "3. Simular fase de grupos"       << endl;
+        cout << "4. Transicion a R16"             << endl;
+        cout << "5. Simular etapas eliminatorias" << endl;
+        cout << "6. Estadisticas del torneo"      << endl;
+        cout << "0. Salir"                        << endl;
         cout << "Opcion: ";
         cin  >> opcion;
 
         switch (opcion) {
         case 1:
-            conformarGrupos();
+            cargarDatos("selecciones_clasificadas_mundial.csv");
+            break;
+        case 2:
+            if (!datosCargados)
+                cerr << "Primero debe cargar los datos (opcion 1)." << endl;
+            else
+                conformarGrupos();
+            break;
+        case 3:
+            if (!gruposConformados)
+                cerr << "Primero debe conformar los grupos (opcion 2)." << endl;
+            else
+                simularFaseGrupos();
+            break;
+        case 4:
+            if (!faseGruposSimulada)
+                cerr << "Primero debe simular la fase de grupos (opcion 3)." << endl;
+            else
+                cout << "Proximamente: transicion a R16." << endl;
+            break;
+        case 5:
+            if (!transicionR16Hecha)
+                cerr << "Primero debe hacer la transicion a R16 (opcion 4)." << endl;
+            else
+                cout << "Proximamente: simulacion eliminatorias." << endl;
+            break;
+        case 6:
+            if (!eliminatoriasSimuladas)
+                cerr << "Primero debe simular las eliminatorias (opcion 5)." << endl;
+            else
+                cout << "Proximamente: estadisticas del torneo." << endl;
             break;
         case 0:
             cout << "Saliendo..." << endl;
