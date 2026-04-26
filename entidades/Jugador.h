@@ -24,9 +24,9 @@ public:
     Jugador& operator=(const Jugador& otro);
     ~Jugador();
 
-    const string&       getNombre()         const;
-    const string&       getApellido()       const;
-    short               getNumeroCamiseta() const;
+    const string& getNombre()         const;
+    const string& getApellido()       const;
+    short         getNumeroCamiseta() const;
 
     EstadisticasJugador&       getEstadisticas();
     const EstadisticasJugador& getEstadisticas() const;

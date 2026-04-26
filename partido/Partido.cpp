@@ -17,7 +17,7 @@ Partido::Partido()
                       arbitros[0].capacity() +
                       arbitros[1].capacity() +
                       arbitros[2].capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Partido::Partido(const string& fecha, const string& hora,
@@ -30,13 +30,13 @@ Partido::Partido(const string& fecha, const string& hora,
     arbitros[0] = arb1;
     arbitros[1] = arb2;
     arbitros[2] = arb3;
-    bytesReportados = this->fecha.capacity()  +
-                      this->hora.capacity()   +
-                      this->sede.capacity()   +
-                      arbitros[0].capacity()  +
-                      arbitros[1].capacity()  +
+    bytesReportados = this->fecha.capacity()   +
+                      this->hora.capacity()    +
+                      this->sede.capacity()    +
+                      arbitros[0].capacity()   +
+                      arbitros[1].capacity()   +
                       arbitros[2].capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Partido::Partido(const Partido& otro)
@@ -54,20 +54,16 @@ Partido::Partido(const Partido& otro)
                       arbitros[0].capacity() +
                       arbitros[1].capacity() +
                       arbitros[2].capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Partido& Partido::operator=(const Partido& otro) {
     if (this == &otro) return *this;
-    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
-    fecha    = otro.fecha;
-    hora     = otro.hora;
-    sede     = otro.sede;
-    equipo1  = otro.equipo1;
-    equipo2  = otro.equipo2;
-    statsEq1 = otro.statsEq1;
-    statsEq2 = otro.statsEq2;
-    prorroga = otro.prorroga;
+    restarMemoria(bytesReportados);
+    fecha    = otro.fecha;    hora     = otro.hora;
+    sede     = otro.sede;     equipo1  = otro.equipo1;
+    equipo2  = otro.equipo2;  statsEq1 = otro.statsEq1;
+    statsEq2 = otro.statsEq2; prorroga = otro.prorroga;
     simulado = otro.simulado;
     arbitros[0] = otro.arbitros[0];
     arbitros[1] = otro.arbitros[1];
@@ -78,12 +74,12 @@ Partido& Partido::operator=(const Partido& otro) {
                       arbitros[0].capacity() +
                       arbitros[1].capacity() +
                       arbitros[2].capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
     return *this;
 }
 
 Partido::~Partido() {
-    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
+    restarMemoria(bytesReportados);
 }
 
 float Partido::aleatorio() const {
@@ -108,36 +104,37 @@ void Partido::seleccionarConvocados(Equipo* equipo,
     size_t bytesLocales = sizeof(char) * 26
                           + sizeof(char) * 2
                           + sizeof(int);
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+    sumarMemoria(bytesLocales);
 
     char indices[26];
     for (char i = 0; i < 26; i++) {
-        indices[(int)i] = i;
-        MedidorRecursos::getInstancia().contarIteracion();
-    }
-    for (char i = 0; i < 11; i++) {
-        char j = (char)(i + rand() % (26 - (int)i));
-        char temp       = indices[(int)i];
-        indices[(int)i] = indices[(int)j];
-        indices[(int)j] = temp;
-        MedidorRecursos::getInstancia().contarIteracion();
-    }
-    for (char i = 0; i < 11; i++) {
-        Jugador* jug = &equipo->getPlantilla()[(int)indices[(int)i]];
-        stats.agregarConvocado(JugadorConvocado(jug, minutos));
-        MedidorRecursos::getInstancia().contarIteracion();
+        indices[i] = i;
+        contarIteracion();
     }
 
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    for (char i = 0; i < 11; i++) {
+        char j          = (char)(i + rand() % (26 - (int)i));
+        char temp       = indices[i];
+        indices[i]      = indices[j];
+        indices[j]      = temp;
+        contarIteracion();
+    }
+
+    for (char i = 0; i < 11; i++) {
+        Jugador* jug = &equipo->getPlantilla()[(int)indices[i]];
+        stats.agregarConvocado(JugadorConvocado(jug, minutos));
+        contarIteracion();
+    }
+
+    restarMemoria(bytesLocales);
 }
 
 void Partido::simularConvocados(EstPartidoEquipo& stats, float lambda) {
     size_t bytesLocales = sizeof(float)
-                          + sizeof(short)
-                          + sizeof(short)
-                          + sizeof(float)
-                          + sizeof(int);
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+    + sizeof(short) * 2
+        + sizeof(float)
+        + sizeof(int);
+    sumarMemoria(bytesLocales);
 
     short metaGoles      = (short)round(lambda);
     short golesAsignados = 0;
@@ -146,7 +143,7 @@ void Partido::simularConvocados(EstPartidoEquipo& stats, float lambda) {
 
     for (int i = 0; i < convocados.getTamanio(); i++) {
         JugadorConvocado& jc = convocados[i];
-        MedidorRecursos::getInstancia().contarIteracion();
+        contarIteracion();
 
         if (golesAsignados < metaGoles && aleatorio() < 0.04f) {
             jc.agregarGol();
@@ -171,18 +168,24 @@ void Partido::simularConvocados(EstPartidoEquipo& stats, float lambda) {
         }
     }
 
+    while (golesAsignados < metaGoles) {
+        int idx = rand() % convocados.getTamanio();
+        convocados[idx].agregarGol();
+        golesAsignados++;
+        contarIteracion();
+    }
+
     stats.setGolesFavor(golesAsignados);
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    restarMemoria(bytesLocales);
 }
 
-void Partido::simular(bool conProrroga) {
+void Partido::simular(bool permitirProrroga) {
     if (simulado || equipo1 == nullptr || equipo2 == nullptr) return;
 
-    size_t bytesLocales = sizeof(bool)
-                          + sizeof(float) * 4
-                          + sizeof(short) * 6
-                          + sizeof(int);
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+    size_t bytesLocales = sizeof(float) * 4
+                          + sizeof(int)
+                          + sizeof(bool);
+    sumarMemoria(bytesLocales);
 
     int minutos = 90;
 
@@ -194,6 +197,7 @@ void Partido::simular(bool conProrroga) {
         equipo2->getEstadisticas().getPromGolesFavor(),
         equipo1->getEstadisticas().getPromGolesContra()
         );
+
     float posA = calcularPosesion(equipo1->getRankingFIFA(),
                                   equipo2->getRankingFIFA());
     statsEq1.setPosesion(posA);
@@ -201,13 +205,14 @@ void Partido::simular(bool conProrroga) {
 
     seleccionarConvocados(equipo1, statsEq1, minutos);
     seleccionarConvocados(equipo2, statsEq2, minutos);
+
     simularConvocados(statsEq1, lambdaA);
     simularConvocados(statsEq2, lambdaB);
 
     statsEq1.setGolesContra(statsEq2.getGolesFavor());
     statsEq2.setGolesContra(statsEq1.getGolesFavor());
 
-    if (conProrroga &&
+    if (permitirProrroga &&
         statsEq1.getGolesFavor() == statsEq2.getGolesFavor()) {
         prorroga = true;
 
@@ -215,15 +220,14 @@ void Partido::simular(bool conProrroga) {
         Lista<JugadorConvocado>& conv2 = statsEq2.getConvocados();
         for (int i = 0; i < conv1.getTamanio(); i++) {
             conv1[i].extenderAProrroga();
-            MedidorRecursos::getInstancia().contarIteracion();
+            contarIteracion();
         }
         for (int i = 0; i < conv2.getTamanio(); i++) {
             conv2[i].extenderAProrroga();
-            MedidorRecursos::getInstancia().contarIteracion();
+            contarIteracion();
         }
-
-        short r1 = equipo1->getRankingFIFA();
-        short r2 = equipo2->getRankingFIFA();
+        short r1      = equipo1->getRankingFIFA();
+        short r2      = equipo2->getRankingFIFA();
         float probEq1 = (float)r2 / (float)(r1 + r2);
         if (aleatorio() < probEq1) {
             statsEq1.setGolesFavor(statsEq1.getGolesFavor() + 1);
@@ -232,23 +236,6 @@ void Partido::simular(bool conProrroga) {
             statsEq2.setGolesFavor(statsEq2.getGolesFavor() + 1);
             statsEq1.setGolesContra(statsEq1.getGolesContra() + 1);
         }
-    }
-
-    short amarillasEq1 = 0, rojasEq1 = 0, faltasEq1 = 0;
-    short amarillasEq2 = 0, rojasEq2 = 0, faltasEq2 = 0;
-    Lista<JugadorConvocado>& conv1 = statsEq1.getConvocados();
-    Lista<JugadorConvocado>& conv2 = statsEq2.getConvocados();
-    for (int i = 0; i < conv1.getTamanio(); i++) {
-        amarillasEq1 += conv1[i].getTarjetasAmarillas();
-        rojasEq1     += conv1[i].getTarjetasRojas();
-        faltasEq1    += conv1[i].getFaltas();
-        MedidorRecursos::getInstancia().contarIteracion();
-    }
-    for (int i = 0; i < conv2.getTamanio(); i++) {
-        amarillasEq2 += conv2[i].getTarjetasAmarillas();
-        rojasEq2     += conv2[i].getTarjetasRojas();
-        faltasEq2    += conv2[i].getFaltas();
-        MedidorRecursos::getInstancia().contarIteracion();
     }
 
     statsEq1.actualizarHistoricos();
@@ -262,7 +249,7 @@ void Partido::simular(bool conProrroga) {
         gf1 > gf2 ? 1 : 0,
         gf1 == gf2 ? 1 : 0,
         gf1 < gf2 ? 1 : 0,
-        amarillasEq1, rojasEq1, faltasEq1
+        0, 0, 0
         );
     equipo1->getEstadisticas() += deltaEq1;
 
@@ -271,24 +258,23 @@ void Partido::simular(bool conProrroga) {
         gf2 > gf1 ? 1 : 0,
         gf2 == gf1 ? 1 : 0,
         gf2 < gf1 ? 1 : 0,
-        amarillasEq2, rojasEq2, faltasEq2
+        0, 0, 0
         );
     equipo2->getEstadisticas() += deltaEq2;
 
     simulado = true;
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    restarMemoria(bytesLocales);
 }
 
-Equipo* Partido::getEquipo1()  const { return equipo1; }
-Equipo* Partido::getEquipo2()  const { return equipo2; }
-bool    Partido::isProrroga()  const { return prorroga; }
-bool    Partido::isSimulado()  const { return simulado; }
-const string& Partido::getFecha() const { return fecha; }
-
-EstPartidoEquipo&       Partido::getStatsEq1()       { return statsEq1; }
-EstPartidoEquipo&       Partido::getStatsEq2()       { return statsEq2; }
-const EstPartidoEquipo& Partido::getStatsEq1() const { return statsEq1; }
-const EstPartidoEquipo& Partido::getStatsEq2() const { return statsEq2; }
+Equipo*                 Partido::getEquipo1()   const { return equipo1; }
+Equipo*                 Partido::getEquipo2()   const { return equipo2; }
+bool                    Partido::isProrroga()   const { return prorroga; }
+bool                    Partido::isSimulado()   const { return simulado; }
+const string&           Partido::getFecha()     const { return fecha; }
+EstPartidoEquipo&       Partido::getStatsEq1()        { return statsEq1; }
+EstPartidoEquipo&       Partido::getStatsEq2()        { return statsEq2; }
+const EstPartidoEquipo& Partido::getStatsEq1() const  { return statsEq1; }
+const EstPartidoEquipo& Partido::getStatsEq2() const  { return statsEq2; }
 
 Equipo* Partido::getGanador() const {
     if (!simulado) return nullptr;
@@ -298,17 +284,14 @@ Equipo* Partido::getGanador() const {
 }
 
 ostream& operator<<(ostream& os, const Partido& p) {
-    os << "Partido: " << p.equipo1->getPais()
-    << " vs "      << p.equipo2->getPais()
-    << " | Fecha: "<< p.fecha
-    << " | Hora: " << p.hora
-    << (p.prorroga ? " | PRORROGA" : "") << "\n"
-    << "  Resultado: "
-    << p.statsEq1.getGolesFavor() << " - "
-    << p.statsEq2.getGolesFavor() << "\n"
-    << "  " << p.equipo1->getPais()
-    << " posesion: " << p.statsEq1.getPosesion() << "%\n"
-    << "  " << p.equipo2->getPais()
-    << " posesion: " << p.statsEq2.getPosesion() << "%\n";
+    os << p.equipo1->getPais() << " vs " << p.equipo2->getPais()
+    << " | Fecha: " << p.fecha
+    << " | Hora: "  << p.hora
+    << " | "        << p.statsEq1.getGolesFavor()
+    << " - "        << p.statsEq2.getGolesFavor()
+    << (p.prorroga ? " (PRORROGA)" : "") << "\n"
+    << "  Posesion: "
+    << p.equipo1->getPais() << " " << p.statsEq1.getPosesion() << "% - "
+    << p.equipo2->getPais() << " " << p.statsEq2.getPosesion() << "%\n";
     return os;
 }

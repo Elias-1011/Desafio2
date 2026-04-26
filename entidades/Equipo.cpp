@@ -10,12 +10,13 @@ Equipo::Equipo()
                       directorTecnico.capacity() +
                       federacion.capacity()      +
                       confederacion.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Equipo::Equipo(short rankingFIFA, const string& pais,
                const string& directorTecnico, const string& federacion,
-               const string& confederacion, const EstadisticasEquipo& estadisticas)
+               const string& confederacion,
+               const EstadisticasEquipo& estadisticas)
     : rankingFIFA(rankingFIFA), pais(pais),
     directorTecnico(directorTecnico), federacion(federacion),
     confederacion(confederacion), plantilla(26),
@@ -24,7 +25,7 @@ Equipo::Equipo(short rankingFIFA, const string& pais,
                       this->directorTecnico.capacity() +
                       this->federacion.capacity()      +
                       this->confederacion.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Equipo::Equipo(const Equipo& otro)
@@ -36,12 +37,12 @@ Equipo::Equipo(const Equipo& otro)
                       directorTecnico.capacity() +
                       federacion.capacity()      +
                       confederacion.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Equipo& Equipo::operator=(const Equipo& otro) {
     if (this == &otro) return *this;
-    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
+    restarMemoria(bytesReportados);
     rankingFIFA     = otro.rankingFIFA;
     pais            = otro.pais;
     directorTecnico = otro.directorTecnico;
@@ -53,12 +54,12 @@ Equipo& Equipo::operator=(const Equipo& otro) {
                       directorTecnico.capacity() +
                       federacion.capacity()      +
                       confederacion.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
     return *this;
 }
 
 Equipo::~Equipo() {
-    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
+    restarMemoria(bytesReportados);
 }
 
 short         Equipo::getRankingFIFA()     const { return rankingFIFA; }
@@ -77,13 +78,8 @@ void Equipo::agregarJugador(const Jugador& jugador) {
     plantilla.agregar(jugador);
 }
 
-bool Equipo::operator<(const Equipo& otro) const {
-    return rankingFIFA < otro.rankingFIFA;
-}
-
-bool Equipo::operator==(const Equipo& otro) const {
-    return pais == otro.pais;
-}
+bool Equipo::operator<(const Equipo& otro)  const { return rankingFIFA < otro.rankingFIFA; }
+bool Equipo::operator==(const Equipo& otro) const { return pais == otro.pais; }
 
 ostream& operator<<(ostream& os, const Equipo& e) {
     os << "[" << e.rankingFIFA << "] "

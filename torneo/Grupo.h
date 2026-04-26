@@ -39,6 +39,7 @@ public:
     void construirTabla();
     void imprimirPartidos() const;
 
+    TablaClasificacion&       getTabla();
     const TablaClasificacion& getTabla() const;
 
     int contarConfederacion(const string& confederacion) const;

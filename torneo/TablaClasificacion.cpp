@@ -25,10 +25,10 @@ void TablaClasificacion::ordenar() {
         while (j >= 0 && clave > entradas[j]) {
             entradas[j + 1] = entradas[j];
             j--;
-            MedidorRecursos::getInstancia().contarIteracion();
+            contarIteracion();
         }
         entradas[j + 1] = clave;
-        MedidorRecursos::getInstancia().contarIteracion();
+        contarIteracion();
     }
 }
 
@@ -49,8 +49,7 @@ int TablaClasificacion::getTamanio() const {
 }
 
 ostream& operator<<(ostream& os, const TablaClasificacion& t) {
-    for (int i = 0; i < t.entradas.getTamanio(); i++) {
+    for (int i = 0; i < t.entradas.getTamanio(); i++)
         os << (i + 1) << ". " << t.entradas[i] << "\n";
-    }
     return os;
 }

@@ -45,11 +45,7 @@ void EstPartidoEquipo::actualizarHistoricos() {
 }
 
 ostream& operator<<(ostream& os, const EstPartidoEquipo& e) {
-    os << "Goles: "    << e.golesFavor
-       << " | Posesion: " << e.posesion << "%"
-       << "\n  Convocados:\n";
-    for (int i = 0; i < e.convocados.getTamanio(); i++) {
-        os << "    " << e.convocados[i] << "\n";
-    }
+    os << "Goles: " << e.golesFavor
+       << " | Posesion: " << e.posesion << "%";
     return os;
 }

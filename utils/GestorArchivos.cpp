@@ -1,69 +1,116 @@
 #include "GestorArchivos.h"
+#include "MedidorRecursos.h"
 
 using namespace std;
 
-GestorArchivos::GestorArchivos() {}
+static int stringToInt(const string& str) {
+    int resultado = 0;
+    int i = 0;
 
-string GestorArchivos::extraerCampo(const string& linea, int& posicion) {
+    if (str.empty()) return 0;
+
+    while (i < (int)str.length() && str[i] == ' ') {
+        i++;
+    }
+
+    for (; i < (int)str.length(); i++) {
+        char c = str[i];
+        if (c >= '0' && c <= '9') {
+            resultado = resultado * 10 + (c - '0');
+        } else {
+            break;
+        }
+    }
+
+    return resultado;
+}
+
+static string extraerCampoConSep(const string& linea, int& posicion, char sep) {
     size_t bytesLocales = sizeof(string);
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+    sumarMemoria(bytesLocales);
 
     string campo = "";
-    while (posicion < (int)linea.size() && linea[posicion] != ';') {
+    while (posicion < (int)linea.size() && linea[posicion] != sep) {
         campo += linea[posicion];
         posicion++;
     }
-    posicion++;
+    if (posicion < (int)linea.size() && linea[posicion] == sep) {
+        posicion++;
+    }
 
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    restarMemoria(bytesLocales);
     return campo;
 }
 
-void GestorArchivos::generarJugadores(Equipo& equipo) {
-    size_t bytesLocales = sizeof(short) * 5
-                          + sizeof(string) * 2;
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+static string extraerCampo(const string& linea, int& posicion) {
+    return extraerCampoConSep(linea, posicion, ';');
+}
+
+static string extraerCampoJugador(const string& linea, int& posicion) {
+    return extraerCampoConSep(linea, posicion, '|');
+}
+
+static void generarJugadores(Equipo& equipo) {
+    size_t bytesLocales = sizeof(short) * 5 + sizeof(string) * 2;
+    sumarMemoria(bytesLocales);
 
     short golesTotal  = equipo.getEstadisticas().getGolesFavor();
     short golesPorJug = golesTotal / 26;
     short golesResto  = golesTotal % 26;
 
     for (short i = 1; i <= 26; i++) {
-        string nombre   = "nombre"   + to_string(i);
-        string apellido = "apellido" + to_string(i);
-        short goles = golesPorJug + (i <= golesResto ? 1 : 0);
+        string nombre   = "nombre";
+        string apellido = "apellido";
+
+        if (i >= 10) {
+            nombre   += char('0' + (i / 10));
+            apellido += char('0' + (i / 10));
+            nombre   += char('0' + (i % 10));
+            apellido += char('0' + (i % 10));
+        } else {
+            nombre   += char('0' + i);
+            apellido += char('0' + i);
+        }
+
+        short goles = golesPorJug;
+        if (i <= golesResto) {
+            goles++;
+        }
+
         EstadisticasJugador estadisticas(goles, 0, 0, 0, 0, 0, 0);
         Jugador jugador(nombre, apellido, i, estadisticas);
         equipo.agregarJugador(jugador);
-        MedidorRecursos::getInstancia().contarIteracion();
+        contarIteracion();
     }
 
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    restarMemoria(bytesLocales);
 }
 
-bool GestorArchivos::cargarEquipos(const string& rutaCSV,
-                                   Lista<Equipo>& equipos) {
-    size_t bytesLocales = sizeof(ifstream)
-                          + sizeof(string) * 11
-                          + sizeof(int)
-                          + sizeof(short) * 6;
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+bool cargarEquipos(const string& rutaCSV, Lista<Equipo>& equipos) {
+    size_t bytesLocales = sizeof(ifstream) + sizeof(string) * 11 + sizeof(int) + sizeof(short) * 6;
+    sumarMemoria(bytesLocales);
 
-    ifstream archivo(rutaCSV);
+    ifstream archivo(rutaCSV.c_str());
     if (!archivo.is_open()) {
         cerr << "Error: no se pudo abrir " << rutaCSV << endl;
-        MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+        restarMemoria(bytesLocales);
         return false;
     }
 
     string linea;
+
     getline(archivo, linea);
+
     getline(archivo, linea);
 
     while (getline(archivo, linea)) {
         if (linea.empty()) continue;
-        if (!linea.empty() && linea.back() == '\r')
-            linea.pop_back();
+
+        if (!linea.empty() && linea[linea.length() - 1] == '\r') {
+            linea = linea.substr(0, linea.length() - 1);
+        }
+
+        if (linea.empty()) continue;
 
         int pos = 0;
         string campoRanking       = extraerCampo(linea, pos);
@@ -77,12 +124,12 @@ bool GestorArchivos::cargarEquipos(const string& rutaCSV,
         string campoEmpatados     = extraerCampo(linea, pos);
         string campoPerdidos      = extraerCampo(linea, pos);
 
-        short ranking    = (short)stoi(campoRanking);
-        short golesFavor = (short)stoi(campoGF);
-        short golesContra= (short)stoi(campoGC);
-        short ganados    = (short)stoi(campoGanados);
-        short empatados  = (short)stoi(campoEmpatados);
-        short perdidos   = (short)stoi(campoPerdidos);
+        short ranking     = (short)stringToInt(campoRanking);
+        short golesFavor  = (short)stringToInt(campoGF);
+        short golesContra = (short)stringToInt(campoGC);
+        short ganados     = (short)stringToInt(campoGanados);
+        short empatados   = (short)stringToInt(campoEmpatados);
+        short perdidos    = (short)stringToInt(campoPerdidos);
 
         EstadisticasEquipo estadisticas(
             golesFavor, golesContra, ganados,
@@ -92,26 +139,28 @@ bool GestorArchivos::cargarEquipos(const string& rutaCSV,
         equipos.agregar(Equipo(ranking, campoPais, campoDT,
                                campoFederacion, campoConfederacion,
                                estadisticas));
-
-        generarJugadores(equipos[equipos.getTamanio() - 1]);
-        MedidorRecursos::getInstancia().contarIteracion();
+        contarIteracion();
     }
 
     archivo.close();
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+
+    for (int i = 0; i < equipos.getTamanio(); i++) {
+        generarJugadores(equipos[i]);
+        contarIteracion();
+    }
+
+    restarMemoria(bytesLocales);
     return true;
 }
 
-bool GestorArchivos::guardarJugadores(const string& rutaArchivo,
-                                      const Lista<Equipo>& equipos) {
-    size_t bytesLocales = sizeof(ofstream)
-                          + sizeof(int) * 2;
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+bool guardarJugadores(const string& rutaArchivo, const Lista<Equipo>& equipos) {
+    size_t bytesLocales = sizeof(ofstream) + sizeof(int) * 2;
+    sumarMemoria(bytesLocales);
 
-    ofstream archivo(rutaArchivo);
+    ofstream archivo(rutaArchivo.c_str());
     if (!archivo.is_open()) {
         cerr << "Error: no se pudo crear " << rutaArchivo << endl;
-        MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+        restarMemoria(bytesLocales);
         return false;
     }
 
@@ -133,27 +182,23 @@ bool GestorArchivos::guardarJugadores(const string& rutaArchivo,
                     << e.getTarjetasAmarillas() << "|"
                     << e.getTarjetasRojas()     << "|"
                     << e.getFaltas()            << "\n";
-            MedidorRecursos::getInstancia().contarIteracion();
+            contarIteracion();
         }
-        MedidorRecursos::getInstancia().contarIteracion();
+        contarIteracion();
     }
 
     archivo.close();
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    restarMemoria(bytesLocales);
     return true;
 }
 
-bool GestorArchivos::cargarJugadores(const string& rutaArchivo,
-                                     Lista<Equipo>& equipos) {
-    size_t bytesLocales = sizeof(ifstream)
-                          + sizeof(string) * 11
-                          + sizeof(int) * 2;
-    MedidorRecursos::getInstancia().sumarMemoria(bytesLocales);
+bool cargarJugadores(const string& rutaArchivo, Lista<Equipo>& equipos) {
+    size_t bytesLocales = sizeof(ifstream) + sizeof(string) * 11 + sizeof(int) * 2;
+    sumarMemoria(bytesLocales);
 
-    ifstream archivo(rutaArchivo);
+    ifstream archivo(rutaArchivo.c_str());
     if (!archivo.is_open()) {
-        cerr << "Error: no se pudo abrir " << rutaArchivo << endl;
-        MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+        restarMemoria(bytesLocales);
         return false;
     }
 
@@ -162,8 +207,9 @@ bool GestorArchivos::cargarJugadores(const string& rutaArchivo,
 
     while (getline(archivo, linea)) {
         if (linea.empty()) continue;
-        if (!linea.empty() && linea.back() == '\r')
-            linea.pop_back();
+        if (!linea.empty() && linea[linea.length() - 1] == '\r') {
+            linea = linea.substr(0, linea.length() - 1);
+        }
 
         if (linea.substr(0, 7) == "EQUIPO:") {
             string nombreEquipo = linea.substr(7);
@@ -174,41 +220,41 @@ bool GestorArchivos::cargarJugadores(const string& rutaArchivo,
                     equipos[i].getPlantilla().limpiar();
                     break;
                 }
-                MedidorRecursos::getInstancia().contarIteracion();
+                contarIteracion();
             }
         } else if (indiceEquipo != -1) {
             int pos = 0;
-            string campoCamiseta    = extraerCampo(linea, pos);
-            string campoNombre      = extraerCampo(linea, pos);
-            string campoApellido    = extraerCampo(linea, pos);
-            string campoGoles       = extraerCampo(linea, pos);
-            string campoPartidos    = extraerCampo(linea, pos);
-            string campoMinutos     = extraerCampo(linea, pos);
-            string campoAsistencias = extraerCampo(linea, pos);
-            string campoAmarillas   = extraerCampo(linea, pos);
-            string campoRojas       = extraerCampo(linea, pos);
-            string campoFaltas      = extraerCampo(linea, pos);
+            string campoCamiseta    = extraerCampoJugador(linea, pos);
+            string campoNombre      = extraerCampoJugador(linea, pos);
+            string campoApellido    = extraerCampoJugador(linea, pos);
+            string campoGoles       = extraerCampoJugador(linea, pos);
+            string campoPartidos    = extraerCampoJugador(linea, pos);
+            string campoMinutos     = extraerCampoJugador(linea, pos);
+            string campoAsistencias = extraerCampoJugador(linea, pos);
+            string campoAmarillas   = extraerCampoJugador(linea, pos);
+            string campoRojas       = extraerCampoJugador(linea, pos);
+            string campoFaltas      = extraerCampoJugador(linea, pos);
 
             EstadisticasJugador estadisticas(
-                (short)stoi(campoGoles),
-                (short)stoi(campoPartidos),
-                stoi(campoMinutos),
-                (short)stoi(campoAsistencias),
-                (short)stoi(campoAmarillas),
-                (short)stoi(campoRojas),
-                (short)stoi(campoFaltas)
+                (short)stringToInt(campoGoles),
+                (short)stringToInt(campoPartidos),
+                stringToInt(campoMinutos),
+                (short)stringToInt(campoAsistencias),
+                (short)stringToInt(campoAmarillas),
+                (short)stringToInt(campoRojas),
+                (short)stringToInt(campoFaltas)
                 );
 
             Jugador jugador(campoNombre, campoApellido,
-                            (short)stoi(campoCamiseta),
+                            (short)stringToInt(campoCamiseta),
                             estadisticas);
 
             equipos[indiceEquipo].agregarJugador(jugador);
-            MedidorRecursos::getInstancia().contarIteracion();
+            contarIteracion();
         }
     }
 
     archivo.close();
-    MedidorRecursos::getInstancia().restarMemoria(bytesLocales);
+    restarMemoria(bytesLocales);
     return true;
 }

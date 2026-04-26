@@ -2,26 +2,18 @@
 
 using namespace std;
 
-MedidorRecursos::MedidorRecursos()
-    : memoriaBytes(0), iteraciones(0) {}
+static size_t memoriaBytes = 0;
+static long   iteraciones  = 0;
 
-MedidorRecursos& MedidorRecursos::getInstancia() {
-    static MedidorRecursos instancia;
-    return instancia;
-}
+void sumarMemoria(size_t bytes)  { memoriaBytes += bytes; }
+void restarMemoria(size_t bytes) { memoriaBytes -= bytes; }
+void contarIteracion(int n)      { iteraciones  += n; }
+void resetIteraciones()          { iteraciones   = 0; }
 
-void MedidorRecursos::sumarMemoria(size_t bytes)  { memoriaBytes += bytes; }
-void MedidorRecursos::restarMemoria(size_t bytes) { memoriaBytes -= bytes; }
-void MedidorRecursos::contarIteracion(int n)      { iteraciones  += n; }
-
-size_t MedidorRecursos::getMemoriaBytes() const { return memoriaBytes; }
-long   MedidorRecursos::getIteraciones()  const { return iteraciones; }
-
-void MedidorRecursos::resetIteraciones() { iteraciones = 0; }
-
-void MedidorRecursos::imprimir() const {
+void imprimirMedidor() {
     cout << "\n--- Medicion de recursos ---" << endl;
-    cout << "Memoria en uso: " << memoriaBytes << " bytes" << endl;
-    cout << "Iteraciones:    " << iteraciones  << endl;
+    cout << "Memoria en uso:        " << memoriaBytes << " bytes" << endl;
+    cout << "Iteraciones:           " << iteraciones  << endl;
+    cout << "Componente ext. usado: rand() [<cstdlib>] para aleatoriedad" << endl;
     cout << "----------------------------\n" << endl;
 }

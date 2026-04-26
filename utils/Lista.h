@@ -29,18 +29,18 @@ private:
             new (reinterpret_cast<T*>(nuevo) + i) T(*apuntador(i));
             apuntador(i)->~T();
         }
-        MedidorRecursos::getInstancia().restarMemoria(sizeof(T) * capacidad);
+        restarMemoria(sizeof(T) * capacidad);
         ::operator delete(bufer);
         bufer     = nuevo;
         capacidad = nuevaCap;
-        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
+        sumarMemoria(sizeof(T) * capacidad);
     }
 
 public:
     Lista(int capInicial = 8)
         : capacidad(capInicial), tamanio(0) {
         bufer = static_cast<char*>(::operator new(sizeof(T) * capacidad));
-        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
+        sumarMemoria(sizeof(T) * capacidad);
     }
 
     Lista(const Lista<T>& otra)
@@ -48,26 +48,26 @@ public:
         bufer = static_cast<char*>(::operator new(sizeof(T) * capacidad));
         for (int i = 0; i < tamanio; i++)
             new (apuntador(i)) T(*otra.apuntador(i));
-        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
+        sumarMemoria(sizeof(T) * capacidad);
     }
 
     Lista<T>& operator=(const Lista<T>& otra) {
         if (this == &otra) return *this;
         for (int i = 0; i < tamanio; i++) apuntador(i)->~T();
-        MedidorRecursos::getInstancia().restarMemoria(sizeof(T) * capacidad);
+        restarMemoria(sizeof(T) * capacidad);
         ::operator delete(bufer);
         capacidad = otra.capacidad;
         tamanio   = otra.tamanio;
         bufer     = static_cast<char*>(::operator new(sizeof(T) * capacidad));
         for (int i = 0; i < tamanio; i++)
             new (apuntador(i)) T(*otra.apuntador(i));
-        MedidorRecursos::getInstancia().sumarMemoria(sizeof(T) * capacidad);
+        sumarMemoria(sizeof(T) * capacidad);
         return *this;
     }
 
     ~Lista() {
         for (int i = 0; i < tamanio; i++) apuntador(i)->~T();
-        MedidorRecursos::getInstancia().restarMemoria(sizeof(T) * capacidad);
+        restarMemoria(sizeof(T) * capacidad);
         ::operator delete(bufer);
     }
 

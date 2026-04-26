@@ -6,7 +6,7 @@ Jugador::Jugador()
     : nombre(""), apellido(""), numeroCamiseta(0),
     estadisticas(), bytesReportados(0) {
     bytesReportados = nombre.capacity() + apellido.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Jugador::Jugador(const string& nombre, const string& apellido,
@@ -15,7 +15,7 @@ Jugador::Jugador(const string& nombre, const string& apellido,
     numeroCamiseta(numeroCamiseta), estadisticas(estadisticas),
     bytesReportados(0) {
     bytesReportados = this->nombre.capacity() + this->apellido.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Jugador::Jugador(const Jugador& otro)
@@ -23,23 +23,23 @@ Jugador::Jugador(const Jugador& otro)
     numeroCamiseta(otro.numeroCamiseta), estadisticas(otro.estadisticas),
     bytesReportados(0) {
     bytesReportados = nombre.capacity() + apellido.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
 }
 
 Jugador& Jugador::operator=(const Jugador& otro) {
     if (this == &otro) return *this;
-    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
+    restarMemoria(bytesReportados);
     nombre         = otro.nombre;
     apellido       = otro.apellido;
     numeroCamiseta = otro.numeroCamiseta;
     estadisticas   = otro.estadisticas;
     bytesReportados = nombre.capacity() + apellido.capacity();
-    MedidorRecursos::getInstancia().sumarMemoria(bytesReportados);
+    sumarMemoria(bytesReportados);
     return *this;
 }
 
 Jugador::~Jugador() {
-    MedidorRecursos::getInstancia().restarMemoria(bytesReportados);
+    restarMemoria(bytesReportados);
 }
 
 const string& Jugador::getNombre()         const { return nombre; }
