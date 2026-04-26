@@ -88,7 +88,7 @@ float Partido::aleatorio() const {
 
 float Partido::calcularLambda(float promGF, float promGC) const {
     if (promGF <= 0.0f) promGF = 0.01f;
-    if (promGC <= 0.0f) promGC = 0.01f;
+    if (promGC <= 0.0f) promGC = 1.0f;
     return MU * pow(promGF / MU, ALFA) * pow(promGC / MU, BETA);
 }
 
@@ -287,6 +287,10 @@ ostream& operator<<(ostream& os, const Partido& p) {
     os << p.equipo1->getPais() << " vs " << p.equipo2->getPais()
     << " | Fecha: " << p.fecha
     << " | Hora: "  << p.hora
+    << " | Sede: "  << p.sede
+    << " | Arbitros: " << p.arbitros[0] << ", "
+    << p.arbitros[1] << ", "
+    << p.arbitros[2]
     << " | "        << p.statsEq1.getGolesFavor()
     << " - "        << p.statsEq2.getGolesFavor()
     << (p.prorroga ? " (PRORROGA)" : "") << "\n"
