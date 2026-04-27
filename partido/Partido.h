@@ -29,7 +29,7 @@ private:
                                EstPartidoEquipo& stats, int minutos);
     void  simularConvocados(EstPartidoEquipo& stats, float lambda);
     float calcularLambda(float promGF, float promGC)          const;
-    float calcularPosesion(short rankingA, short rankingB)    const;
+    short calcularPosesion(short rankingA, short rankingB) const;
     float aleatorio()                                          const;
 
 public:

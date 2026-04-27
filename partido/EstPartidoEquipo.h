@@ -11,7 +11,7 @@ class EstPartidoEquipo {
 private:
     short                  golesFavor;
     short                  golesContra;
-    float                  posesion;
+    short                  posesion;
     Lista<JugadorConvocado> convocados;
 
 public:
@@ -21,13 +21,13 @@ public:
 
     short getGolesFavor()  const;
     short getGolesContra() const;
-    float getPosesion()    const;
+    short getPosesion()    const;
     Lista<JugadorConvocado>&       getConvocados();
     const Lista<JugadorConvocado>& getConvocados() const;
 
     void setGolesFavor(short g);
     void setGolesContra(short g);
-    void setPosesion(float p);
+    void setPosesion(short p);
     void agregarConvocado(const JugadorConvocado& jc);
 
     void actualizarHistoricos();

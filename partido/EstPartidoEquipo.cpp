@@ -21,7 +21,7 @@ EstPartidoEquipo& EstPartidoEquipo::operator=(const EstPartidoEquipo& otro) {
 
 short EstPartidoEquipo::getGolesFavor()  const { return golesFavor; }
 short EstPartidoEquipo::getGolesContra() const { return golesContra; }
-float EstPartidoEquipo::getPosesion()    const { return posesion; }
+short EstPartidoEquipo::getPosesion() const { return posesion; }
 
 Lista<JugadorConvocado>& EstPartidoEquipo::getConvocados() {
     return convocados;
@@ -32,7 +32,7 @@ const Lista<JugadorConvocado>& EstPartidoEquipo::getConvocados() const {
 
 void EstPartidoEquipo::setGolesFavor(short g)  { golesFavor = g; }
 void EstPartidoEquipo::setGolesContra(short g) { golesContra = g; }
-void EstPartidoEquipo::setPosesion(float p)    { posesion = p; }
+void EstPartidoEquipo::setPosesion(short p) { posesion = p; }
 
 void EstPartidoEquipo::agregarConvocado(const JugadorConvocado& jc) {
     convocados.agregar(jc);

@@ -92,10 +92,10 @@ float Partido::calcularLambda(float promGF, float promGC) const {
     return MU * pow(promGF / MU, ALFA) * pow(promGC / MU, BETA);
 }
 
-float Partido::calcularPosesion(short rankingA, short rankingB) const {
+short Partido::calcularPosesion(short rankingA, short rankingB) const {
     float total = (float)(rankingA + rankingB);
-    if (total == 0.0f) return 50.0f;
-    return ((float)rankingB / total) * 100.0f;
+    if (total == 0.0f) return 50;
+    return (short)(((float)rankingB / total) * 100.0f);
 }
 
 void Partido::seleccionarConvocados(Equipo* equipo,
@@ -166,13 +166,6 @@ void Partido::simularConvocados(EstPartidoEquipo& stats, float lambda) {
                     jc.agregarFalta();
             }
         }
-    }
-
-    while (golesAsignados < metaGoles) {
-        int idx = rand() % convocados.getTamanio();
-        convocados[idx].agregarGol();
-        golesAsignados++;
-        contarIteracion();
     }
 
     stats.setGolesFavor(golesAsignados);
@@ -295,7 +288,7 @@ ostream& operator<<(ostream& os, const Partido& p) {
     << " - "        << p.statsEq2.getGolesFavor()
     << (p.prorroga ? " (PRORROGA)" : "") << "\n"
     << "  Posesion: "
-    << p.equipo1->getPais() << " " << p.statsEq1.getPosesion() << "% - "
-    << p.equipo2->getPais() << " " << p.statsEq2.getPosesion() << "%\n";
+    << p.equipo1->getPais() << " " << (short)p.statsEq1.getPosesion() << "% - "
+    << p.equipo2->getPais() << " " << (short)p.statsEq2.getPosesion() << "%\n";
     return os;
 }
